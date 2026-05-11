@@ -1,5 +1,5 @@
-🍱 Çevrimiçi Yemek Sipariş Platformu Veritabanı TasarımıBu proje,
-VTYS-1 dersi kapsamında geliştirilmiş; klasik yemek sipariş süreçlerini ve özel "Askıda Yemek" modülünü içeren, 3. Normal Form'a (3NF) uygun bir veritabanı tasarımıdır. 
+🍱 Çevrimiçi Yemek Sipariş Platformu Veritabanı Tasarımı 
+Bu proje, VTYS-1 dersi kapsamında geliştirilmiş; klasik yemek sipariş süreçlerini ve özel "Askıda Yemek" modülünü içeren, 3. Normal Form'a (3NF) uygun bir veritabanı tasarımıdır. 
 🚀 Proje İçeriği
 Kullanıcı Yönetimi: Müşteri, Restoran ve Kurye rolleri.  Menü Sistemi: Restoran bazlı ürün yönetimi ve fiyatlandırma.
 Sipariş Takibi: Siparişlerin durum yönetimi ve detaylandırılması.  
