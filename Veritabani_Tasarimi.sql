@@ -70,3 +70,28 @@ CREATE TABLE SiparisDetaylari (
     Adet INT CHECK (Adet > 0),
     BirimFiyat DECIMAL(10,2)
 );
+-- 8. TETİKLEYİCİLER (TRIGGERS) [cite: 29]
+-- Askıda Yemek havuzundaki bakiyeyi otomatik güncelleyen trigger
+GO
+CREATE TRIGGER trg_AskidaBakiyeGuncelle
+ON AskidaYemekIslemleri
+AFTER INSERT
+AS
+BEGIN
+    DECLARE @Tutar DECIMAL(10,2), @Tip NVARCHAR(10)
+    
+    -- Yeni eklenen satırdaki tutarı ve işlem tipini alıyoruz
+    SELECT @Tutar = Tutar, @Tip = IslemTipi FROM INSERTED
+
+    IF @Tip = 'Bagis'
+    BEGIN
+        UPDATE AskidaYemekHavuzu 
+        SET ToplamBakiye = ToplamBakiye + @Tutar, SonGuncelleme = GETDATE()
+    END
+    ELSE IF @Tip = 'Kullanim'
+    BEGIN
+        UPDATE AskidaYemekHavuzu 
+        SET ToplamBakiye = ToplamBakiye - @Tutar, SonGuncelleme = GETDATE()
+    END
+END
+GO
