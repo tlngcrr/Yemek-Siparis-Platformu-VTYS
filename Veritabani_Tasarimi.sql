@@ -95,3 +95,44 @@ BEGIN
     END
 END
 GO
+-- 10. GÖRÜNÜMLER (VIEWS) 
+
+-- Görünüm 1: Aktif restoranların menülerini ve fiyatlarını listeler [cite: 27]
+GO
+CREATE VIEW vw_AktifMenuListesi AS
+SELECT R.RestoranAd, U.UrunAd, U.Fiyat
+FROM Restoranlar R
+INNER JOIN Urunler U ON R.RestoranID = U.RestoranID
+WHERE R.IsActive = 1 AND U.IsActive = 1; -- Soft Delete kontrolü [cite: 20]
+GO
+
+-- Görünüm 2: Askıda yemek havuzunun güncel durumunu gösterir [cite: 28]
+CREATE VIEW vw_AskidaHavuzOzet AS
+SELECT ToplamBakiye, SonGuncelleme
+FROM AskidaYemekHavuzu;
+GO
+-- 11. İNDEKSLER (INDEX) 
+-- E-posta ile giriş yapıldığı için hızlı arama sağlar
+CREATE INDEX IDX_KullaniciEposta ON Kullanicilar(Eposta);
+
+-- Restoran adına göre aramalarda hızı artırır
+CREATE INDEX IDX_RestoranAd ON Restoranlar(RestoranAd);
+-- 12. İLERİ DÜZEY SORGULAR
+
+-- A. JOIN Kullanımı: Detaylı sipariş fişi sorgusu [cite: 22]
+SELECT S.SiparisID, K.Ad + ' ' + K.Soyad AS Musteri, R.RestoranAd, S.ToplamTutar, S.SiparisDurumu
+FROM Siparisler S
+INNER JOIN Kullanicilar K ON S.MusteriID = K.KullaniciID
+INNER JOIN Restoranlar R ON S.RestoranID = R.RestoranID;
+
+-- B. Agregasyon: Restoran bazlı toplam sipariş tutarları [cite: 23]
+SELECT R.RestoranAd, SUM(S.ToplamTutar) AS ToplamCiro, AVG(S.ToplamTutar) AS OrtalamaSepet
+FROM Restoranlar R
+LEFT JOIN Siparisler S ON R.RestoranID = S.RestoranID
+GROUP BY R.RestoranAd
+HAVING COUNT(S.SiparisID) > 0;
+
+-- C. Alt Sorgu (Subquery): Hiç bağış yapmamış aktif kullanıcılar 
+SELECT Ad, Soyad, Eposta 
+FROM Kullanicilar 
+WHERE KullaniciID NOT IN (SELECT DISTINCT KullaniciID FROM AskidaYemekIslemleri WHERE IslemTipi = 'Bagis');
