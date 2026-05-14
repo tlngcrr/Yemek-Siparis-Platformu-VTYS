@@ -136,3 +136,74 @@ HAVING COUNT(S.SiparisID) > 0;
 SELECT Ad, Soyad, Eposta 
 FROM Kullanicilar 
 WHERE KullaniciID NOT IN (SELECT DISTINCT KullaniciID FROM AskidaYemekIslemleri WHERE IslemTipi = 'Bagis');
+-- 13. MOCK DATA (SİSTEMİ DOLDURMA) [cite: 17, 18]
+
+-- Müşteri Sayısını 20'ye Tamamlama
+INSERT INTO Kullanicilar (Ad, Soyad, Eposta, Telefon, KullaniciTipi, IsVerified)
+VALUES 
+('Can', 'Öz', 'can@mail.com', '05550001122', 'Musteri', 0),
+('Ece', 'Su', 'ece@mail.com', '05553334455', 'Musteri', 1), -- İhtiyaç Sahibi
+('Ali', 'Can', 'ali@mail.com', '05559990011', 'Musteri', 0),
+('Ayşe', 'Nur', 'ayse@mail.com', '05441112233', 'Musteri', 0);
+-- (Bu şekilde 20'ye tamamlayacak şekilde devam edebilirsin)
+
+-- 5 Restoran Tamamlama 
+INSERT INTO Restoranlar (YoneticiID, RestoranAd, Puan)
+VALUES 
+(2, 'Lezzet Durağı', 4.5),
+(2, 'Mühendis Pizzacı', 4.2),
+(2, 'Vegan Dünyası', 3.9),
+(2, 'Sokak Lezzetleri', 4.7);
+
+-- Ürünleri Çoğaltma (Her restorana farklı ürünler) 
+INSERT INTO Urunler (RestoranID, UrunAd, Fiyat)
+VALUES 
+(2, 'Tavuk Döner', 120.00), (2, 'Ayran', 20.00),
+(3, 'Karışık Pizza', 250.00), (3, 'Kola', 45.00),
+(4, 'Falafel Dürüm', 110.00), (5, 'Köfte Ekmek', 140.00);
+
+-- Bağış Yapma Testi
+INSERT INTO AskidaYemekIslemleri (KullaniciID, IslemTipi, Tutar, GizliBagis)
+VALUES (1, 'Bagis', 500.00, 1); -- Ahmet 500 TL bağışladı (Gizli)
+
+-- İhtiyaç Sahibi Kullanımı
+INSERT INTO AskidaYemekIslemleri (KullaniciID, IslemTipi, Tutar)
+VALUES (3, 'Kullanim', 150.00); -- Mehmet havuzdan 150 TL harcadı
+
+-- Son Durumu Kontrol Et
+SELECT * FROM vw_AskidaHavuzOzet; -- View kullanarak havuzu gör [cite: 28]
+
+-- Günlük Sipariş Sayısı Analizi
+SELECT CAST(SiparisTarihi AS DATE) AS Gun, COUNT(*) AS GunlukSiparisSayisi
+FROM Siparisler
+GROUP BY CAST(SiparisTarihi AS DATE);
+
+-- ÖRNEK VERİLERLE SİSTEMİ CANLANDIRMA
+
+-- Önce havuzu sıfırla (eğer içinde veri yoksa başlangıç kaydı oluştur)
+IF NOT EXISTS (SELECT 1 FROM AskidaYemekHavuzu)
+    INSERT INTO AskidaYemekHavuzu (ToplamBakiye) VALUES (0);
+
+-- 1. TEST: Hayırsever Ahmet 1000 TL bağış yapıyor
+INSERT INTO AskidaYemekIslemleri (KullaniciID, IslemTipi, Tutar, GizliBagis)
+VALUES (1, 'Bagis', 1000.00, 0);
+
+-- 2. TEST: Hayırsever Caner 500 TL bağış yapıyor
+INSERT INTO AskidaYemekIslemleri (KullaniciID, IslemTipi, Tutar, GizliBagis)
+VALUES (2, 'Bagis', 500.00, 1); -- Gizli bağış
+
+-- 3. TEST: İhtiyaç sahibi (IsVerified=1 olan) bir kullanıcı 200 TL'lik harcama yapıyor
+INSERT INTO AskidaYemekIslemleri (KullaniciID, IslemTipi, Tutar)
+VALUES (3, 'Kullanim', 200.00);
+
+-- 4. TEST: Örnek bir sipariş oluşturma
+INSERT INTO Siparisler (MusteriID, RestoranID, KuryeID, ToplamTutar, SiparisDurumu, AskidaMi)
+VALUES (3, 1, 2, 200.00, 'Teslim Edildi', 1); -- Bu sipariş askıdan karşılandı
+
+-- Güncel durumu görmek için
+SELECT * FROM vw_AskidaHavuzOzet;
+
+-- Kim ne kadar bağış yapmış/harcamış listesi
+SELECT K.Ad, K.Soyad, A.IslemTipi, A.Tutar, A.IslemTarihi
+FROM AskidaYemekIslemleri A
+JOIN Kullanicilar K ON A.KullaniciID = K.KullaniciID;
